@@ -21,7 +21,7 @@ public class UserEventDTO {
     }
 
     @JsonAnySetter
-    public void addMetadata(String key, Object value) {
+    public void setMetadata(String key, Object value) {
         if (null == metadata) {
             this.metadata = new HashMap<>();
         }
