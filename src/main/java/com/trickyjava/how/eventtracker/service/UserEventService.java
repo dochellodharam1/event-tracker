@@ -10,7 +10,6 @@ import com.trickyjava.how.eventtracker.model.UserEvent;
 import com.trickyjava.how.eventtracker.repository.DeviceInfoRepository;
 import com.trickyjava.how.eventtracker.repository.EventSessionRepository;
 import com.trickyjava.how.eventtracker.repository.UserEventRepository;
-import com.trickyjava.how.eventtracker.util.Utility;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Example;
@@ -19,9 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.io.StringWriter;
-import java.io.Writer;
 import java.time.Instant;
-import java.util.function.Consumer;
 
 @Service
 @Log4j2
