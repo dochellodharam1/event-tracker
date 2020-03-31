@@ -17,7 +17,6 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
-import java.io.StringWriter;
 import java.time.Instant;
 
 @Service
@@ -47,12 +46,7 @@ public class UserEventService {
         DeviceInfo deviceInfo = DeviceInfoFactory.createDeviceInfo();
         UserEvent userEvent = new UserEvent();
         asyncExecutorService.execute(() -> {
-            StringWriter writer = new StringWriter();
-            try {
-                mapper.writeValue(writer, dto.getMetadata());
-            } catch (Exception e) {
-            }
-            userEvent.setMetadata(writer.toString());
+            userEvent.setMetadata(dto.getMetadata());
             userEvent.setWhenCreated(Instant.now());
             EventSession persistedEventSession = eventSessionRepository.findOne(Example.of(eventSession))
                     .orElseGet(() -> eventSessionRepository.save(eventSession));
