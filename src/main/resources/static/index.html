@@ -4,13 +4,15 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello Doc! Dialogues</title>
+    <title>Hello Doc! Sessions</title>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round|Open+Sans">
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>
+
     <style type="text/css">
 		body {
 			color: #404E67;
@@ -97,9 +99,7 @@
 	</style>
     <script type="text/javascript">
 		$(document).ready(function(){
-			var controls = '<a class="add" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a>' +
-							'<a class="edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a>' +
-							'<a class="delete" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a>';
+			var controls = '<a class="view" title="View" target="_blank" data-toggle="tooltip"><i class="material-icons">open_in_new</i></a>';
 			var params = (function() {
 				var p = new URLSearchParams(window.location.search);
 				return {
@@ -129,16 +129,26 @@
 			 $.ajax({ url: urls.list, method: 'GET' })
             .then(function( data ) {
 				data.content.forEach(function(d){
+					var success = false;
 					var tds = '';
-					$('table thead th').each(function() {
-						var formatStr = $(this).attr("data-format");
-						if(formatStr) {
-							var format = JSON.parse(formatStr);
-							tds += '<td data-type="' + format.name + '">' + d[format.name] + '</td>';
-						}
-					});
-					tds += '<td>' + controls + '</td>';
-					$('table tbody').append('<tr id="' + d.id + '">' + tds + '</tr>');
+					try {
+						$('table thead th').each(function() {
+							var formatStr = $(this).attr("data-format");
+							if(formatStr) {
+								var format = JSON.parse(formatStr);
+								var beautify = format.beautify || "function(val) {return val[format.name];}";
+								var evalText = '(' + beautify + ')(d)';
+								tds += '<td data-type="' + format.name + '">' + eval(evalText) + '</td>';
+							}
+						});
+						tds += '<td>';
+						tds += '<a class="view" title="View" target="_blank" href="/session.html?s=' + d.sessionId + '" data-toggle="tooltip"><i class="material-icons">open_in_new</i></a>';
+						tds += '</td>';
+						success = true;
+					} catch(e){ }
+					if(success) {
+						$('table tbody').append('<tr id="' + d.id + '">' + tds + '</tr>');
+					}
 				});
 				var pagination = $("ul.pagination");
 				for(var i = 0; i < data.totalPages; i++) {
@@ -264,6 +274,7 @@
 					$(".add-new").removeAttr("disabled");
 				});
 			});
+			
 		});
 	</script>
 </head>
@@ -273,38 +284,26 @@
         <div class="table-title">
             <div class="row">
                 <div class="col-sm-8"><h2>Sessions</h2></div>
-                <div class="col-sm-4">
-                    <button type="button" class="btn btn-info add-new"><i class="fa fa-plus"></i> Add New</button>
-                </div>
             </div>
         </div>
         <table class="table table-bordered"
-               data-url-list="{baseURL}/data"
+               data-url-list="https://phoenix-event-tracker.herokuapp.com/data/sessions"
                data-url-create="{baseURL}/data"
                data-url-read="{baseURL}/data"
                data-url-update="{baseURL}/data"
                data-url-delete="{baseURL}/data" >
             <thead>
             <tr>
-                <th data-format='{"name": "intent", "nature": "text", "value": ""}'>Intent</th>
-                <th data-format='{"name": "reply", "nature": "text", "value": ""}'>Reply</th>
-                <th data-format='{"name": "action", "nature": "select",
-					"options": [
-						{"k": "NO_ACTION", "v":"NO_ACTION"},
-						{"k": "MAP_SEARCH", "v":"MAP_SEARCH"}, 
-						{"k": "WEB_SEARCH", "v":"WEB_SEARCH"}, 
-						{"k": "DRUG_SEARCH", "v":"DRUG_SEARCH"}, 
-						{"k": "SYMPTOM_CHECK", "v":"SYMPTOM_CHECK"}, 
-						{"k": "REPEAT_PREVIOUS_REPLY", "v":"REPEAT_PREVIOUS_REPLY"}, 
-						{"k": "DO_LAST_ACTION", "v":"DO_LAST_ACTION"}
-					], "value": "JUST_REPLY"}'>Action</th>
-                <th data-format='{"name": "whenToAct", "nature": "select",
-                    "options": [
-                        {"k": "NEVER", "v":"NEVER"},
-                        {"k": "AT_ONCE", "v":"AT_ONCE"},
-                        {"k": "AFTER_NEXT_INPUT", "v":"AFTER_NEXT_INPUT"}
-                    ], "value": "NEVER"}'>When to act</th>
-                <th data-format='{"name": "replyAfterAction", "nature": "text", "value": ""}'>Reply after action</th>
+                <th data-format='{"name": "userId", "nature": "text", "value": ""}'>User ID</th>
+                <th data-format='{"name": "sessionId", "nature": "text", "value": ""}'>Session ID</th>
+                <th data-format='{"name": "ip",        "nature": "text", "value": ""}'>IP</th>
+                <th data-format='{"name": "whenCreated", "nature": "text", "value": ""}'>When Created</th>
+                <th data-format='{"name": "lastHeartBeat", "nature": "text", "value": "",
+					"beautify": "function(val) { return jQuery.timeago(new Date(val.lastHeartBeat)); }"
+				}'>Last heart beat at</th>
+                <th data-format='{"name": "fn", "nature": "text", "value": "", 
+					"beautify": "function(val) { return ((new Date() - new Date(val.lastHeartBeat)) / 1000 / 60) > 10 ? \"INACTIVE\": \"ACTIVE\"; }"
+				}'>Status</th>
                 <th>Controls</th>
             </tr>
             </thead>
