@@ -223,9 +223,14 @@ body {
 	line-height: 0;
     text-align: center;
 }
+.time {
+	float: right;
+    color: #aeaeae;
+}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-timeago/1.6.7/jquery.timeago.min.js"></script>
 </head>
 <body>
 <div class="chat_window">
@@ -254,6 +259,7 @@ body {
         <div class="avatar"></div>
         <div class="text_wrapper">
             <div class="text"></div>
+			<div class="time" title=""></div>
         </div>
     </li>
 </div>
@@ -268,13 +274,20 @@ body {
 	(function () {
         var Message;
         Message = function (arg) {
-            this.text = arg.text, this.message_side = arg.message_side, this.headed = arg.headed, this.avatar_class = arg.avatar_class;
+            this.text = arg.text; 
+			this.message_side = arg.message_side;
+			this.headed = arg.headed;
+			this.avatar_class = arg.avatar_class;
+			this.timestamp = arg.timestamp;
             this.draw = function (_this) {
                 return function () {
                     var $message;
                     $message = $($('.message_template').clone().html());
                     $message.addClass(_this.message_side).find('.text').html(_this.text);
 					$message.find('.avatar').addClass(_this.avatar_class);
+					var time = $message.find('.time');
+					time.attr('title', _this.timestamp);
+					time.text(jQuery.timeago(new Date(_this.timestamp)));
                     if(_this.headed) {
                         $('.messages').prepend($message);
                     } else {
@@ -295,7 +308,7 @@ body {
                 $message_input = $('.message_input');
                 return $message_input.val();
             };
-            sendMessage = function (text, who, headed) {
+            sendMessage = function (text, who, headed, timestamp) {
                 var $messages, message;
                 if (text.trim() === '') {
                     return;
@@ -307,17 +320,19 @@ body {
                     text: text,
                     message_side: message_side,
                     headed: headed,
-					avatar_class: who
+					avatar_class: who,
+					timestamp: timestamp
                 });
                 message.draw();
-                return $messages.animate({ scrollTop: $messages.prop('scrollHeight') }, 300);
+				var h = headed? 0 : 300;
+                return $messages.animate({ scrollTop: $messages.prop('scrollHeight') }, h);
             };
             $('.send_message').click(function (e) {
-                return sendMessage(getMessageText(), 'me', false);
+                return sendMessage(getMessageText(), 'me', false, new Date().toISOString());
             });
             $('.message_input').keyup(function (e) {
                 if (e.which === 13) {
-                    return sendMessage(getMessageText(), 'me', false);
+                    return sendMessage(getMessageText(), 'me', false, new Date().toISOString());
                 }
             });
             var boundary = {
@@ -334,7 +349,7 @@ body {
                     .then(function( data ) {
                         data.content.forEach(function(d) {
                             var m = JSON.parse(d.metadata);
-                            sendMessage(m.i, m.w, h);
+                            sendMessage(m.i, m.w, h, d.whenCreated);
                             if(h) {
                                 boundary.before = d.whenCreated;
                             } else {
@@ -352,9 +367,15 @@ body {
                     });
                 })(json, headed);
             };
+			var clicked = false;
 			$(document).on("click", ".load_more", function(e){
-				$(this).remove();
-                loadMessages({'before': boundary.before, 'page': boundary.page, 'sort': 'whenCreated'}, true);
+				if(!clicked) {
+					clicked = true;
+					$(this).find('.text').text('Loading items...');
+					loadMessages({'before': boundary.before, 'sort': 'whenCreated,DESC'}, true);
+					$(this).remove();
+					clicked = false;
+				}
             });
             var interval = setInterval(function() {
                loadMessages({'after': boundary.after}, false);
@@ -362,7 +383,7 @@ body {
 					clearInterval(interval);
 			   }
             }, 5000);
-            loadMessages({'before': boundary.before, 'page': boundary.page, 'sort': 'whenCreated'}, true);
+            loadMessages({'before': boundary.before, 'sort': 'whenCreated,DESC'}, true);
         });
     }.call(this));
 </script>
