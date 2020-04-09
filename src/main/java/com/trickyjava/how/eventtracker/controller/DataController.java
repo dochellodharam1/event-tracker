@@ -49,7 +49,7 @@ public class DataController {
                                                           @SortDefault(sort = "whenCreated", direction = Sort.Direction.DESC)
                                                   }) Pageable pageable) {
         return ResponseEntity.ok(
-                sessionRepository.findById(sessionId)
+                sessionRepository.findBySessionId(sessionId)
                         .map(eventSession ->
                                 Optional.ofNullable(after)
                                         .map(instantAfter -> Optional.ofNullable(before)

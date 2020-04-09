@@ -1,6 +1,5 @@
 package com.trickyjava.how.eventtracker.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.trickyjava.how.eventtracker.dto.UserEventDTO;
 import com.trickyjava.how.eventtracker.factory.DeviceInfoFactory;
 import com.trickyjava.how.eventtracker.factory.EventSessionFactory;
@@ -18,7 +17,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Date;
 
 @Service
 @Log4j2
@@ -32,8 +30,6 @@ public class UserEventService {
 
     @Autowired
     private EventSessionRepository eventSessionRepository;
-
-    private ObjectMapper mapper = new ObjectMapper();
 
     @Autowired
     private AsyncExecutorService asyncExecutorService;
@@ -50,7 +46,10 @@ public class UserEventService {
             userEvent.setMetadata(dto.getMetadata());
             userEvent.setWhenCreated(Instant.now());
             EventSession persistedEventSession = eventSessionRepository.findOne(Example.of(eventSession))
-                    .orElseGet(() -> eventSessionRepository.save(eventSession));
+                    .orElseGet(() -> {
+                        eventSession.setWhenCreated(Instant.now());
+                        return eventSessionRepository.save(eventSession);
+                    });
             userEvent.setEventSession(persistedEventSession);
             DeviceInfo persistedDeviceInfo = deviceInfoRepository.findOne(Example.of(deviceInfo))
                     .orElseGet(() -> deviceInfoRepository.save(deviceInfo));

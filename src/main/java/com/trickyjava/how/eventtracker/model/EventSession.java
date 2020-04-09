@@ -16,5 +16,6 @@ public class EventSession {
     private String sessionId;
     private String userId;
     private String ip;
+    private Instant whenCreated;
     private Instant lastHeartBeat;
 }
