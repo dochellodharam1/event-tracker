@@ -42,8 +42,8 @@ public class DataController {
     @CrossOrigin
     @GetMapping("/sessions/{id}/events")
     public ResponseEntity<Page<UserEvent>> events(@PathVariable("id") String sessionId,
-                                                  @RequestParam("before") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant before,
-                                                  @RequestParam("after") @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant after,
+                                                  @RequestParam(name = "before", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant before,
+                                                  @RequestParam(name = "after", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) Instant after,
                                                   @PageableDefault(page = 0, size = 20)
                                                   @SortDefault.SortDefaults({
                                                           @SortDefault(sort = "whenCreated", direction = Sort.Direction.DESC)
