@@ -384,8 +384,8 @@ body {
 				}
             });
             var interval = setInterval(function() {
-               loadMessages({'after': boundary.after}, false);
-			   if(noNewMessageCount == 10) {
+               loadMessages({'after': boundary.after, 'sort': 'whenCreated,ASC'}, false);
+			   if(noNewMessageCount == 60) {
 					clearInterval(interval);
 			   }
             }, 5000);
