@@ -211,17 +211,18 @@ body {
 	background-size: 60px 60px;
 }
 .messages .load-more {
-    background-color: #aeaeae;
+    background-color: #13547a;
     margin: 0 auto;
     display: block !important;
     cursor: pointer;
 }
 .messages .load-more:hover {
-    background-color: #ff0000;
+    background-color: #e4efe9;
 }
 .messages .load-more .text {
 	line-height: 0;
     text-align: center;
+	color: #aaa;
 }
 .time {
 	float: right;
@@ -342,11 +343,14 @@ body {
             };
 			var noNewMessageCount = 0;
             var sessionId = new URLSearchParams(window.location.search).get("s");
-            var loadMessages = function(json, headed) {
-                (function(j, h) {
-                    var eventsUri = '/data/sessions/' + sessionId + '/events';
+            var loadMessages = function(json, headed, fn) {
+                (function(j, h, f) {
+                    var eventsUri = 'https://phoenix-event-tracker.herokuapp.com/data/sessions/' + sessionId + '/events';
                     $.ajax({ url: eventsUri, method: 'GET', data: j })
                     .then(function( data ) {
+						if(f) {
+							f(data);
+						}
                         data.content.forEach(function(d) {
                             var m = JSON.parse(d.metadata);
                             sendMessage(m.i, m.w, h, d.whenCreated);
@@ -365,15 +369,17 @@ body {
 							noNewMessageCount++;
 						}
                     });
-                })(json, headed);
+                })(json, headed, fn);
             };
 			var clicked = false;
 			$(document).on("click", ".load_more", function(e){
 				if(!clicked) {
 					clicked = true;
+					var _this = $(this);
 					$(this).find('.text').text('Loading items...');
-					loadMessages({'before': boundary.before, 'sort': 'whenCreated,DESC'}, true);
-					$(this).remove();
+					loadMessages({'before': boundary.before, 'sort': 'whenCreated,DESC'}, true, function(a){
+						_this.remove();
+					});
 					clicked = false;
 				}
             });
