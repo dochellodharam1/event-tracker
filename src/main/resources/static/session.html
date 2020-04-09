@@ -199,7 +199,7 @@ body {
   line-height: 48px;
 }
 
-.message_template {
+.message_template, .load_more_template {
   display: none;
 }
 .me {
@@ -354,7 +354,7 @@ body {
             };
 			$(document).on("click", ".load_more", function(e){
 				$(this).remove();
-                loadMessages({'before': boundary.before, 'page': boundary.page}, true);
+                loadMessages({'before': boundary.before, 'page': boundary.page, 'sort': 'whenCreated'}, true);
             });
             var interval = setInterval(function() {
                loadMessages({'after': boundary.after}, false);
@@ -362,7 +362,7 @@ body {
 					clearInterval(interval);
 			   }
             }, 5000);
-            loadMessages({'before': boundary.before, 'page': boundary.page}, true);
+            loadMessages({'before': boundary.before, 'page': boundary.page, 'sort': 'whenCreated'}, true);
         });
     }.call(this));
 </script>
