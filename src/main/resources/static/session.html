@@ -322,6 +322,7 @@ body {
             });
             var boundary = {
                 before: new Date().toISOString(),
+				page: 0,
                 after: new Date().toISOString()
             };
 			var noNewMessageCount = 0;
@@ -343,6 +344,7 @@ body {
 						if(h && !data.last) {
 							var loadMore = $($('.load_more_template').clone().html());
 							$('.messages').prepend(loadMore);
+							 boundary.page = boundary.page + 1;
 						}
 						if(!h && data.last) {
 							noNewMessageCount++;
@@ -350,8 +352,9 @@ body {
                     });
                 })(json, headed);
             };
-            $('.load_more').click(function(e){
-                loadMessages({'before': boundary.before}, true);
+			$(document).on("click", ".load_more", function(e){
+				$(this).remove();
+                loadMessages({'before': boundary.before, 'page': boundary.page}, true);
             });
             var interval = setInterval(function() {
                loadMessages({'after': boundary.after}, false);
@@ -359,7 +362,7 @@ body {
 					clearInterval(interval);
 			   }
             }, 5000);
-            loadMessages({'before': boundary.before}, true);
+            loadMessages({'before': boundary.before, 'page': boundary.page}, true);
         });
     }.call(this));
 </script>
