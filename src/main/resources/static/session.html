@@ -119,7 +119,7 @@ body {
   border-radius: 50%;
   display: inline-block;
 }
-.messages .message .text_wrapper {
+.messages .message .text_wrapper, .messages .load-more {
   display: inline-block;
   padding: 20px;
   border-radius: 6px;
@@ -202,6 +202,27 @@ body {
 .message_template {
   display: none;
 }
+.me {
+	background-image: url('https://i.ya-webdesign.com/images/teacher-clip-filipino-3.png');
+	background-size: 60px 60px;
+}
+.bot {
+	background-image: url('https://cdn3.iconfinder.com/data/icons/chat-bot-emoji-blue-filled-color/300/14134081Untitled-3-512.png');
+	background-size: 60px 60px;
+}
+.messages .load-more {
+    background-color: #aeaeae;
+    margin: 0 auto;
+    display: block !important;
+    cursor: pointer;
+}
+.messages .load-more:hover {
+    background-color: #ff0000;
+}
+.messages .load-more .text {
+	line-height: 0;
+    text-align: center;
+}
     </style>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
@@ -216,19 +237,9 @@ body {
         </div>
         <div class="title">Session</div>
     </div>
+	
     <ul class="messages">
-        <li class="message left appeared">
-            <div class="avatar"></div>
-            <div class="text_wrapper">
-                <div class="text">Hello Philip! :)</div>
-            </div>
-        </li>
-        <li class="message right appeared">
-            <div class="avatar"></div>
-            <div class="text_wrapper">
-                <div class="text">Hi Sandy! How are you?</div>
-            </div>
-        </li>
+        
     </ul>
     <div class="bottom_wrapper clearfix" style="display:none">
         <div class="message_input_wrapper"><input class="message_input" placeholder="Type your message here..."></div>
@@ -246,17 +257,24 @@ body {
         </div>
     </li>
 </div>
-
+<div class="load_more_template">
+    <li class="load_more message appeared">
+		<div class="text_wrapper load-more">
+			<div class="text">Load more</div>
+		</div>
+	</li>
+</div>
 <script type="text/javascript">
 	(function () {
         var Message;
         Message = function (arg) {
-            this.text = arg.text, this.message_side = arg.message_side, this.headed = arg.headed;
+            this.text = arg.text, this.message_side = arg.message_side, this.headed = arg.headed, this.avatar_class = arg.avatar_class;
             this.draw = function (_this) {
                 return function () {
                     var $message;
                     $message = $($('.message_template').clone().html());
                     $message.addClass(_this.message_side).find('.text').html(_this.text);
+					$message.find('.avatar').addClass(_this.avatar_class);
                     if(_this.headed) {
                         $('.messages').prepend($message);
                     } else {
@@ -284,11 +302,12 @@ body {
                 }
                 $('.message_input').val('');
                 $messages = $('.messages');
-                message_side = who == 'bot' ? 'left' : 'right';
+                message_side = who == 'bot' ? 'right' : 'left';
                 message = new Message({
                     text: text,
                     message_side: message_side,
-                    headed: headed
+                    headed: headed,
+					avatar_class: who
                 });
                 message.draw();
                 return $messages.animate({ scrollTop: $messages.prop('scrollHeight') }, 300);
@@ -305,8 +324,9 @@ body {
                 before: new Date().toISOString(),
                 after: new Date().toISOString()
             };
+			var noNewMessageCount = 0;
             var sessionId = new URLSearchParams(window.location.search).get("s");
-            var loadMessages = function(json) {
+            var loadMessages = function(json, headed) {
                 (function(j, h) {
                     var eventsUri = '/data/sessions/' + sessionId + '/events';
                     $.ajax({ url: eventsUri, method: 'GET', data: j })
@@ -320,14 +340,24 @@ body {
                                 boundary.after = d.whenCreated;
                             }
                         });
+						if(h && !data.last) {
+							var loadMore = $($('.load_more_template').clone().html());
+							$('.messages').prepend(loadMore);
+						}
+						if(!h && data.last) {
+							noNewMessageCount++;
+						}
                     });
                 })(json, headed);
             };
-            $('.load_previous').click(function(e){
+            $('.load_more').click(function(e){
                 loadMessages({'before': boundary.before}, true);
             });
-            setInterval(function() {
+            var interval = setInterval(function() {
                loadMessages({'after': boundary.after}, false);
+			   if(noNewMessageCount == 10) {
+					clearInterval(interval);
+			   }
             }, 5000);
             loadMessages({'before': boundary.before}, true);
         });
