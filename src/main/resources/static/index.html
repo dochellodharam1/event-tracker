@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Hello Doc! Dialogues</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto|Varela+Round|Open+Sans">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.12.4/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+    <style type="text/css">
+		body {
+			color: #404E67;
+			background: #F5F7FA;
+			font-family: 'Open Sans', sans-serif;
+		}
+		.table-wrapper {
+			margin: 30px auto;
+			background: #fff;
+			padding: 20px;
+			box-shadow: 0 1px 1px rgba(0,0,0,.05);
+		}
+		.table-title {
+			padding-bottom: 10px;
+			margin: 0 0 10px;
+		}
+		.table-title h2 {
+			margin: 6px 0 0;
+			font-size: 22px;
+		}
+		.table-title .add-new {
+			float: right;
+			height: 30px;
+			font-weight: bold;
+			font-size: 12px;
+			text-shadow: none;
+			min-width: 100px;
+			border-radius: 50px;
+			line-height: 13px;
+		}
+		.table-title .add-new i {
+			margin-right: 4px;
+		}
+		table.table {
+			table-layout: fixed;
+		}
+		table.table tr th, table.table tr td {
+			border-color: #e9e9e9;
+		}
+		table.table th i {
+			font-size: 13px;
+			margin: 0 5px;
+			cursor: pointer;
+		}
+		table.table th:last-child {
+			width: 100px;
+		}
+		table.table td a {
+			cursor: pointer;
+			display: inline-block;
+			margin: 0 5px;
+			min-width: 24px;
+		}
+		table.table td a.add {
+			color: #27C46B;
+		}
+		table.table td a.edit {
+			color: #FFC107;
+		}
+		table.table td a.delete {
+			color: #E34724;
+		}
+		table.table td i {
+			font-size: 19px;
+		}
+		table.table td a.add i {
+			font-size: 24px;
+			margin-right: -1px;
+			position: relative;
+			top: 3px;
+		}
+		table.table .form-control {
+			height: 32px;
+			line-height: 32px;
+			box-shadow: none;
+			border-radius: 2px;
+		}
+		table.table .form-control.error {
+			border-color: #f50000;
+		}
+		table.table td .add {
+			display: none;
+		}
+	</style>
+    <script type="text/javascript">
+		$(document).ready(function(){
+			var controls = '<a class="add" title="Add" data-toggle="tooltip"><i class="material-icons">&#xE03B;</i></a>' +
+							'<a class="edit" title="Edit" data-toggle="tooltip"><i class="material-icons">&#xE254;</i></a>' +
+							'<a class="delete" title="Delete" data-toggle="tooltip"><i class="material-icons">&#xE872;</i></a>';
+			var params = (function() {
+				var p = new URLSearchParams(window.location.search);
+				return {
+					page: p.get('page') ? p.get('page') : 0,
+					size: p.get('size') ? p.get('size') : 20
+				};
+			})();
+			var prepareSearch = function(p, s) {
+				return '?page=' +  p + '&size=' + s;
+			};
+			var urls = (function() {
+				var baseURL = window.location.pathname;
+				baseURL = baseURL.substring(0, baseURL.length - 1);
+				var table = $('table');
+				var prepareURL = function(p) {
+					return table.attr('data-url-' + p).replace("{baseURL}", baseURL);
+				};
+				return {
+					baseURL: baseURL,
+					list: prepareURL('list') + prepareSearch(params.page, params.size),
+					create: prepareURL('create'),
+					read: prepareURL('read'),
+					update: prepareURL('update'),
+					delete: prepareURL('delete')
+				};
+			})();
+			 $.ajax({ url: urls.list, method: 'GET' })
+            .then(function( data ) {
+				data.content.forEach(function(d){
+					var tds = '';
+					$('table thead th').each(function() {
+						var formatStr = $(this).attr("data-format");
+						if(formatStr) {
+							var format = JSON.parse(formatStr);
+							tds += '<td data-type="' + format.name + '">' + d[format.name] + '</td>';
+						}
+					});
+					tds += '<td>' + controls + '</td>';
+					$('table tbody').append('<tr id="' + d.id + '">' + tds + '</tr>');
+				});
+				var pagination = $("ul.pagination");
+				for(var i = 0; i < data.totalPages; i++) {
+					var url = urls.baseURL + prepareSearch(i, data.pageable.pageSize);
+					var cl = i == data.pageable.pageNumber ? ' class="active"' : '';
+					pagination.append('<li' + cl + '><a href="' + url + '">' + (i + 1) + '</a></li>');
+				}
+				
+			});
+			$('[data-toggle="tooltip"]').tooltip();
+			// Append table with add row form on add new button click
+			$(".add-new").click(function(){
+				$(this).attr("disabled", "disabled");
+				var index = $("table tbody tr:last-child").index();
+				var tds = '';
+				$('table thead th').each(function() {
+					var formatStr = $(this).attr("data-format");
+					if(formatStr) {
+						var format = JSON.parse(formatStr);
+						switch(format.nature) {
+							case "text":
+								tds += '<td><input type="text" class="form-control" name="' + format.name + '" value="' + format.value + '"></td>'
+							break;
+							case "select":
+								tds += '<td><select class="form-control" name="' + format.name + '">';
+								format.options.forEach(function(i) {
+									var selected = i.k == format.value ? "selected" : "";
+									tds += '<option value="' + i.k + '" ' + selected + '>' + i.v + '</option>';
+								});
+								tds += '</select></td>';
+							break;
+						}
+					}
+				});
+				tds += '<td>' + controls + '</td>';
+				$("table").append('<tr>' + tds + '</tr>');
+				$("table tbody tr").eq(index + 1).find(".add, .edit").toggle();
+				$('[data-toggle="tooltip"]').tooltip();
+			});
+			// Add row on add button click
+			$(document).on("click", ".add", function(){
+				var empty = false;
+				var row = $(this).parents("tr");
+				var input = row.find(".form-control");
+				input.each(function(){
+					if(!$(this).val()){
+						$(this).addClass("error");
+						empty = true;
+					} else{
+						$(this).removeClass("error");
+					}
+				});
+				row.find(".error").first().focus();
+				if(!empty){
+					var id = row.attr("id");
+					var method = id ? "PUT" : "POST";
+					var url = id ? urls.update + "/" + id : urls.create;
+					var separator = '';
+					var data = '{ ';
+					input.each(function() {
+						var name = $(this).attr("name");
+						var value = $(this).val();
+						data += separator + '"' + name + '": "' + value + '"';
+						separator = ',';
+					});
+					data += ' }';
+					$.ajax({ 
+						url: url, 
+						method: method,  
+						contentType: "application/json; charset=utf-8",
+						dataType: "json",
+						data : data
+					}).then(function(data) {
+						input.each(function(){
+							$(this).parent("td").html($(this).val());
+						});
+						row.attr("id", data.id);
+						row.find(".add, .edit").toggle();
+						$(".add-new").removeAttr("disabled");
+					});
+				}
+			});
+			// Edit row on edit button click
+			$(document).on("click", ".edit", function(){
+				$(this).parents("tr").find("td:not(:last-child)").each(function(){
+					var type = $(this).attr("data-type");
+					var value = $(this).text();
+					var td = $(this);
+					$('table thead th').each(function() {
+						var formatStr = $(this).attr("data-format");
+						if(formatStr) {
+							var format = JSON.parse(formatStr);
+							if(format.name == type) {
+								var input = '';
+								switch(format.nature) {
+									case "text":
+										input = '<input type="text" class="form-control" name="' + format.name + '" value="' + value + '">'
+									break;
+									case "select":
+										input += '<select class="form-control" name="' + format.name + '">';
+										format.options.forEach(function(i) {
+											var selected = i.k == value ? "selected" : "";
+											input += '<option value="' + i.k + '" ' + selected + '>' + i.v + '</option>';
+										});
+										input += '</select>';
+									break;
+								}
+								td.html(input);
+							}
+						}
+					});
+				});
+				$(this).parents("tr").find(".add, .edit").toggle();
+				$(".add-new").attr("disabled", "disabled");
+			});
+			// Delete row on delete button click
+			$(document).on("click", ".delete", function(){
+				var row = $(this).parents("tr");
+				var id = row.attr("id");
+				$.ajax({ url: urls.delete + "/" + id, method: 'DELETE' })
+				.then(function(data) {
+					row.remove();
+					$(".add-new").removeAttr("disabled");
+				});
+			});
+		});
+	</script>
+</head>
+<body>
+<div class="container">
+    <div class="table-wrapper">
+        <div class="table-title">
+            <div class="row">
+                <div class="col-sm-8"><h2>Sessions</h2></div>
+                <div class="col-sm-4">
+                    <button type="button" class="btn btn-info add-new"><i class="fa fa-plus"></i> Add New</button>
+                </div>
+            </div>
+        </div>
+        <table class="table table-bordered"
+               data-url-list="{baseURL}/data"
+               data-url-create="{baseURL}/data"
+               data-url-read="{baseURL}/data"
+               data-url-update="{baseURL}/data"
+               data-url-delete="{baseURL}/data" >
+            <thead>
+            <tr>
+                <th data-format='{"name": "intent", "nature": "text", "value": ""}'>Intent</th>
+                <th data-format='{"name": "reply", "nature": "text", "value": ""}'>Reply</th>
+                <th data-format='{"name": "action", "nature": "select",
+					"options": [
+						{"k": "NO_ACTION", "v":"NO_ACTION"},
+						{"k": "MAP_SEARCH", "v":"MAP_SEARCH"}, 
+						{"k": "WEB_SEARCH", "v":"WEB_SEARCH"}, 
+						{"k": "DRUG_SEARCH", "v":"DRUG_SEARCH"}, 
+						{"k": "SYMPTOM_CHECK", "v":"SYMPTOM_CHECK"}, 
+						{"k": "REPEAT_PREVIOUS_REPLY", "v":"REPEAT_PREVIOUS_REPLY"}, 
+						{"k": "DO_LAST_ACTION", "v":"DO_LAST_ACTION"}
+					], "value": "JUST_REPLY"}'>Action</th>
+                <th data-format='{"name": "whenToAct", "nature": "select",
+                    "options": [
+                        {"k": "NEVER", "v":"NEVER"},
+                        {"k": "AT_ONCE", "v":"AT_ONCE"},
+                        {"k": "AFTER_NEXT_INPUT", "v":"AFTER_NEXT_INPUT"}
+                    ], "value": "NEVER"}'>When to act</th>
+                <th data-format='{"name": "replyAfterAction", "nature": "text", "value": ""}'>Reply after action</th>
+                <th>Controls</th>
+            </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+        <ul class="pagination" style="margin:20px auto; display: table;">
+        </ul>
+    </div>
+</div>
+</body>
+</html>

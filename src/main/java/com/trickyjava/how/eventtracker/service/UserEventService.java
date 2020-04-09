@@ -18,6 +18,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.Date;
 
 @Service
 @Log4j2
@@ -58,5 +59,13 @@ public class UserEventService {
             userEventRepository.save(userEvent);
             return true;
         });
+    }
+
+    public void heartBeat(UserEventDTO dto) {
+        EventSession eventSession = EventSessionFactory.createEventSession(dto.getUserId(), dto.getSessionId());
+        EventSession persistedEventSession = eventSessionRepository.findOne(Example.of(eventSession))
+                .orElseGet(() -> eventSessionRepository.save(eventSession));
+        persistedEventSession.setLastHeartBeat(Instant.now());
+        eventSessionRepository.save(persistedEventSession);
     }
 }
