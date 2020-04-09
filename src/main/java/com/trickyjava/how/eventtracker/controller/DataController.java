@@ -53,11 +53,11 @@ public class DataController {
                         .map(eventSession ->
                                 Optional.ofNullable(after)
                                         .map(instantAfter -> Optional.ofNullable(before)
-                                                .map(instantBefore -> eventRepository.findAllByEventSessionWhenCreatedBetween(eventSession, instantAfter, instantBefore, pageable))
-                                                .orElseGet(() -> eventRepository.findAllByEventSessionWhenCreatedGreaterThanEqual(eventSession, instantAfter, pageable))
+                                                .map(instantBefore -> eventRepository.findAllByEventSessionAndWhenCreatedBetween(eventSession, instantAfter, instantBefore, pageable))
+                                                .orElseGet(() -> eventRepository.findAllByEventSessionAndWhenCreatedGreaterThanEqual(eventSession, instantAfter, pageable))
                                         )
                                         .orElseGet(() -> Optional.ofNullable(before)
-                                                .map(instantBefore -> eventRepository.findAllByEventSessionWhenCreatedLessThanEqual(eventSession, instantBefore, pageable))
+                                                .map(instantBefore -> eventRepository.findAllByEventSessionAndWhenCreatedLessThanEqual(eventSession, instantBefore, pageable))
                                                 .orElseGet(() -> eventRepository.findAllByEventSession(eventSession, pageable))))
                         .orElse(null));
     }

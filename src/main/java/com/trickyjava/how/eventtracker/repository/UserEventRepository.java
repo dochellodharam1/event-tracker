@@ -12,9 +12,9 @@ import java.time.Instant;
 public interface UserEventRepository extends MongoRepository<UserEvent, String>, QueryByExampleExecutor<UserEvent> {
     Page<UserEvent> findAllByEventSession(EventSession eventSession, Pageable pageable);
 
-    Page<UserEvent> findAllByEventSessionWhenCreatedLessThanEqual(EventSession eventSession, Instant whenCreated, Pageable pageable);
+    Page<UserEvent> findAllByEventSessionAndWhenCreatedLessThanEqual(EventSession eventSession, Instant whenCreated, Pageable pageable);
 
-    Page<UserEvent> findAllByEventSessionWhenCreatedGreaterThanEqual(EventSession eventSession, Instant whenCreated, Pageable pageable);
+    Page<UserEvent> findAllByEventSessionAndWhenCreatedGreaterThanEqual(EventSession eventSession, Instant whenCreated, Pageable pageable);
 
-    Page<UserEvent> findAllByEventSessionWhenCreatedBetween(EventSession eventSession, Instant whenCreatedAfter, Instant whenCreatedBefore, Pageable pageable);
+    Page<UserEvent> findAllByEventSessionAndWhenCreatedBetween(EventSession eventSession, Instant whenCreatedAfter, Instant whenCreatedBefore, Pageable pageable);
 }
