@@ -345,7 +345,7 @@ body {
             var sessionId = new URLSearchParams(window.location.search).get("s");
             var loadMessages = function(json, headed, fn) {
                 (function(j, h, f) {
-                    var eventsUri = 'https://phoenix-event-tracker.herokuapp.com/data/sessions/' + sessionId + '/events';
+                    var eventsUri = '/data/sessions/' + sessionId + '/events';
                     $.ajax({ url: eventsUri, method: 'GET', data: j })
                     .then(function( data ) {
 						if(f) {
@@ -390,6 +390,13 @@ body {
 			   }
             }, 5000);
             loadMessages({'before': boundary.before, 'sort': 'whenCreated,DESC'}, true);
+			setInterval(function() {
+				$('.time').each(function(){
+					var _this = $(this);
+					var time = _this.attr('title');
+					_this.text(jQuery.timeago(new Date(time)));
+				});
+			}, 1000);
         });
     }.call(this));
 </script>
